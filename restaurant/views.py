@@ -1,5 +1,6 @@
 import django_filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import CreateAPIView, ListCreateAPIView
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
 from .serializers import RegisterUserSerializer, ListingRestaurantSerializer, CreateRestaurantSerializer, \
@@ -14,6 +15,10 @@ from .filtersets import CategoryFilter
 
 
 # Create your views here.
+
+def check_user_ownership(restaurant, user):
+    if restaurant.user != user:
+        raise PermissionDenied("You don't have permission to access this restaurant's resources.")
 
 
 class RestaurantPage(ReadOnlyModelViewSet):
@@ -40,6 +45,11 @@ class MenuPageView(ListCreateAPIView):
             return CreateMenuSerializer
         return ListingMenuSerializer
 
+    def perform_create(self, serializer):
+        restaurant = serializer.validated_data.get('restaurant')
+        check_user_ownership(restaurant, self.request.user)
+        serializer.save()
+
 
 class SubCategoryViewSet(mixins.ListModelMixin,
                          mixins.CreateModelMixin,
@@ -59,6 +69,12 @@ class SubCategoryViewSet(mixins.ListModelMixin,
         elif self.action == 'create':
             return CreateSubCategorySerializer
 
+    def perform_create(self, serializer):
+        main_category = serializer.validated_data.get('main_category')
+        restaurant = main_category.restaurant
+        check_user_ownership(restaurant, self.request.user)
+        serializer.save()
+
 
 class CreateDishViewSet(mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
@@ -69,6 +85,13 @@ class CreateDishViewSet(mixins.CreateModelMixin,
     permission_classes = [IsAuthenticated]
     lookup_field = 'name'
 
+    def perform_create(self, serializer):
+        sub_category = serializer.validated_data.get('sub_category')
+        main_category = sub_category.main_category
+        restaurant = main_category.restaurant
+        check_user_ownership(restaurant, self.request.user)
+        serializer.save()
+
 
 class CreateIngredientViewSet(mixins.CreateModelMixin,
                               mixins.UpdateModelMixin,
@@ -78,6 +101,14 @@ class CreateIngredientViewSet(mixins.CreateModelMixin,
     serializer_class = CreateDishIngredientSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'name'
+
+    def perform_create(self, serializer):
+        dish = serializer.validated_data.get('dish')
+        sub_category = dish.sub_category
+        main_category = sub_category.main_category
+        restaurant = main_category.restaurant
+        check_user_ownership(restaurant, self.request.user)
+        serializer.save()
 
 
 class RegisterPage(CreateAPIView):

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     'user',
     'rest_framework',
+    'restaurant',
 ]
 
 MIDDLEWARE = [
@@ -141,7 +142,7 @@ AUTH_USER_MODEL = 'user.CustomUser'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
-                                'rest_framework.filters.OrderingFilter']
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
+#                                 'rest_framework.filters.OrderingFilter']
+# }

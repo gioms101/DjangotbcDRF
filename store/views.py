@@ -1,12 +1,13 @@
-from django.contrib.auth import login
+import django_filters
 from django.core.mail import send_mail
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ProductListSerializer, RegisterUserSerializer, SendEmailSerializer
+from .serializers import ProductListSerializer, SendEmailSerializer
 from .models import Product
 from user.models import CustomUser
 from .filtersets import ProductFilter
+from .paginations import MyPagination
 
 
 # Create your views here.
@@ -14,8 +15,10 @@ from .filtersets import ProductFilter
 class ListPage(ListAPIView):
     queryset = Product.objects.join_related_tables()
     serializer_class = ProductListSerializer
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     filterset_class = ProductFilter
     ordering_fields = ['price', 'quantity']
+    pagination_class = MyPagination
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -29,14 +32,6 @@ class ProductDetailPage(RetrieveAPIView):
     queryset = Product.objects.join_related_tables()
     serializer_class = ProductListSerializer
     lookup_field = 'slug'
-
-
-class RegisterPage(CreateAPIView):
-    serializer_class = RegisterUserSerializer
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        login(self.request, user)
 
 
 class SendEmailPage(CreateAPIView):

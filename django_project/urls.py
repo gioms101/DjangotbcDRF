@@ -25,6 +25,7 @@ urlpatterns = [
      path('admin/', admin.site.urls),
      path('', include('store.urls')),
      path('order/', include('order.urls')),
+     path('restaurant/', include('restaurant.urls')),
      path('api-auth/', include('rest_framework.urls'))
 ] + debug_toolbar_urls()
 
